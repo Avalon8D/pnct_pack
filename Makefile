@@ -42,7 +42,7 @@ file_path=$(code_path)/c_code
 file=$(code_path)/c_code/general_clustering_wraper
 
 compile:
-	PATH=${PATH}:$(CONDA_PATH) gcc -c -o $(code_path)/$(file_base_name).o \
+	LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:$(CONDA_PATH)/lib gcc -c -o $(code_path)/$(file_base_name).o \
 	-fPIC -Wall -Wextra -Wpedantic -Wformat -D_GNU_SOURCE \
 	-I$(file_path) $(file).c -lgsl -lm -llapacke -Ofast \
 	&& gcc -shared -o $(code_path)/$(file_base_name).so \
