@@ -12,7 +12,7 @@ PYTHON=$(CONDA_BIN)/python
 CONDA=$(CONDA_BIN)/conda
 GCC=$(CONDA_BIN)/gcc
 
-CONDA_FORGE_REQUIREMENTS=-c conda-forge gcc gsl blas lapack
+CONDA_FORGE_REQUIREMENTS=-c conda-forge gsl blas lapack
 CONDA_ANACONDA_REQUIREMENTS=-c anaconda gcc libgcc
 
 download_conda:
