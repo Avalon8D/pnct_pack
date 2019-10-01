@@ -13,7 +13,6 @@ CONDA=$(CONDA_BIN)/conda
 GCC=$(CONDA_BIN)/gcc
 
 CONDA_FORGE_REQUIREMENTS=-c conda-forge gsl blas lapack
-CONDA_ANACONDA_REQUIREMENTS=-c anaconda gcc libgcc
 
 download_conda:
 	if [ ! -f $(CONDA_SCRIPT) ]; then
@@ -30,7 +29,6 @@ install_conda:
 requirements: 
 	$(PIP) install -r requirements.txt
 	$(CONDA) install $(CONDA_FORGE_REQUIREMENTS) -y
-	$(CONDA) install $(CONDA_ANACONDA_REQUIREMENTS) -y
 
 install: download_conda install_conda requirements
 
@@ -46,13 +44,14 @@ file_path=$(code_path)/c_code
 file=$(code_path)/c_code/general_clustering_wraper
 
 compile:
-	$(GCC) -c -o $(code_path)/$(file_base_name).o \
+	gcc -c -o $(code_path)/$(file_base_name).o \
 	-fPIC -Wall -Wextra -Wpedantic -Wformat -D_GNU_SOURCE \
-	-I$(file_path) $(file).c -lgsl -lm -llapacke -Ofast \
-	&& $(GCC) -shared -o $(code_path)/$(file_base_name).so \
+	-I$(file_path) -I$(CONDA_PATH)/include $(file).c \
+	-lm -Ofast \
+	&& gcc -shared -o $(code_path)/$(file_base_name).so \
 	-Wall -Wextra -Wpedantic -Wformat \
-	-I$(file_path) $(code_path)/$(file_base_name).o \
-	-lgsl -lm -llapacke -Ofast
+	-I$(file_path) -I$(CONDA_PATH)/include $(code_path)/$(file_base_name).o \
+	-lm -Ofast
 
 clean_compile:
 	rm -f $(code_path)/*.o
