@@ -10,6 +10,7 @@ CONDA_BIN=$(CONDA_PATH)/bin
 PIP=$(CONDA_BIN)/pip
 PYTHON=$(CONDA_BIN)/python
 CONDA=$(CONDA_BIN)/conda
+GCC=$(CONDA_BIN)/gcc
 
 CONDA_REQUIREMENTS=-c conda-forge gsl blas lapack
 
@@ -22,7 +23,7 @@ download_conda:
 
 install_conda:
 	$(CONDA_SCRIPT) -b -p /tmp/$(CONDA_PATH) -f
-	/tmp/$(CONDA) create -f -p $(CONDA_PATH) python==3.7 conda -y
+	/tmp/$(CONDA) create -f -p $(CONDA_PATH) python==3.7 conda gcc -y
 	rm -rf /tmp/$(CONDA)
 
 requirements: 
@@ -42,10 +43,10 @@ file_path=$(code_path)/c_code
 file=$(code_path)/c_code/general_clustering_wraper
 
 compile:
-	LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:$(CONDA_PATH)/lib gcc -c -o $(code_path)/$(file_base_name).o \
+	$(GCC) -c -o $(code_path)/$(file_base_name).o \
 	-fPIC -Wall -Wextra -Wpedantic -Wformat -D_GNU_SOURCE \
 	-I$(file_path) $(file).c -lgsl -lm -llapacke -Ofast \
-	&& gcc -shared -o $(code_path)/$(file_base_name).so \
+	&& $(GCC) -shared -o $(code_path)/$(file_base_name).so \
 	-Wall -Wextra -Wpedantic -Wformat \
 	-I$(file_path) $(code_path)/$(file_base_name).o \
 	-lgsl -lm -llapacke -Ofast
