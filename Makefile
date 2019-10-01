@@ -1,8 +1,8 @@
-.PHONY: compile, clean_compile, build, conda_install, requirements, clean
+.PHONY: compile, clean_compile, build, download_conda, install_conda, requirements, all, clean
+.ONESHELL:
 
 MINICONDA_URL="https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh"
 
-SHELL=bash
 CONDA_PATH=.conda_env
 TMP_PATH=.tmp
 CONDA_SCRIPT=$(TMP_PATH)/miniconda_script.sh
@@ -14,9 +14,11 @@ CONDA=$(CONDA_BIN)/conda
 CONDA_REQUIREMENTS=-c conda-forge gsl blas lapack
 
 download_conda:
-	mkdir -p $(TMP_PATH)
-	wget -O $(CONDA_SCRIPT) $(MINICONDA_URL)
-	chmod +x $(CONDA_SCRIPT)
+	if [ ! -f $(CONDA_SCRIPT) ]; then
+		mkdir -p $(TMP_PATH)
+		wget -O $(CONDA_SCRIPT) $(MINICONDA_URL)
+		chmod +x $(CONDA_SCRIPT)
+	fi
 
 install_conda:
 	$(CONDA_SCRIPT) -b -p $(CONDA_PATH) -f
