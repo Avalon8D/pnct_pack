@@ -21,7 +21,9 @@ download_conda:
 	fi
 
 install_conda:
-	$(CONDA_SCRIPT) -b -p $(CONDA_PATH) -f
+	$(CONDA_SCRIPT) -b -p /tmp/$(CONDA_PATH) -f
+	/tmp/$(CONDA) create -f -p $(CONDA_PATH) python==3.7 conda -y
+	rm -rf /tmp/$(CONDA)
 
 requirements: 
 	$(PIP) install -r requirements.txt
