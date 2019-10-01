@@ -1,8 +1,8 @@
 # Requerimentos
 
-* make *
-* wget *
-* gcc *
+- ** make **
+- ** wget **
+- ** gcc **
 
 # Para instalar o conda localmente, com todas as dependências
 
@@ -10,9 +10,9 @@
 
 # Caminho para alguns comandos
 
-python: `.conda_env/bin/python`
-pip: `.conda_env/bin/pip`
-conda: `.conda_env/bin/conda`
+- python: `.conda_env/bin/python`
+- pip: `.conda_env/bin/pip`
+- conda: `.conda_env/bin/conda`
 
 # Para compilar o código C
 
