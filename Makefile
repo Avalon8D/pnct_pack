@@ -12,7 +12,8 @@ PYTHON=$(CONDA_BIN)/python
 CONDA=$(CONDA_BIN)/conda
 GCC=$(CONDA_BIN)/gcc
 
-CONDA_REQUIREMENTS=-c conda-forge gcc gsl blas lapack
+CONDA_FORGE_REQUIREMENTS=-c conda-forge gcc gsl blas lapack
+CONDA_ANACONDA_REQUIREMENTS=-c anaconda gcc libgcc
 
 download_conda:
 	if [ ! -f $(CONDA_SCRIPT) ]; then
@@ -28,7 +29,8 @@ install_conda:
 
 requirements: 
 	$(PIP) install -r requirements.txt
-	$(CONDA) install $(CONDA_REQUIREMENTS) -y
+	$(CONDA) install $(CONDA_FORGE_REQUIREMENTS) -y
+	$(CONDA) install $(CONDA_ANACONDA_REQUIREMENTS) -y
 
 install: download_conda install_conda requirements
 
