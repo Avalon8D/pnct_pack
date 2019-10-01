@@ -35,6 +35,7 @@ install: download_conda install_conda requirements
 clean_conda:
 	rm -rf $(CONDA_PATH)
 	rm -rf $(TMP_PATH)
+	rm -rf /tmp/$(CONDA_PATH)
 
 code_path=all_code
 bin_path=$(code_path)/bin
