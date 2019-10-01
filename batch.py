@@ -5,7 +5,7 @@ from os.path import exists
 
 sys.path += ['/home/sianna/issues/C_Clustering/code']
 
-import python_interface_funcs as cluster_lib
+from all_code import python_interface_funcs as cluster_lib
 import builtins
 
 from subprocess import run
