@@ -1,15 +1,16 @@
 from numpy import *
 from pandas import read_csv
 from os import sys, listdir
-from os.path import isfile, exists
-
-sys.path += ['/home/sianna/issues/C_Clustering/code']
+from os.path import isfile, exists, join
+from argparse import ArgumentParser
 
 from all_code import python_interface_funcs as cluster_lib
 import builtins
 
 from subprocess import run
 from numba import jit
+
+import datetime
 
 def bootstrap_class_imputation (
     class_matrix, imputed_matrix, data_cluster_ids, 
@@ -77,21 +78,64 @@ def trucate_class_matrix (imputed_class_matrix, data_len, class_count, data_flen
 
     return imputed_class_matrix_int.reshape (data_len, class_count * data_flen)
 
-in_path = '/home/sianna/issues/C_Clustering/data/'
-tables_in_path = in_path + 'relatorios_2018/'
-tables_in_path = in_path + 'relatorios_broken/'
-year = 2018
+parser = ArgumentParser(description="""\
+    Batch script to cluster and detect outliers from directory containing equipments data.
+""")
+
+parser.add_argument('system_tag', help="Type of classes used, for example: pnct, sgp, hdm4. Used only for filename lookup and writing.")
+parser.add_argument('year', type=int, help="Year for which days are being class imputed")
+parser.add_argument('eqs', help="Directory containing folders for each equipment data.")
+parser.add_argument(
+    '--list-eqs-done', default='',
+    help="File on which to save and check list of equipments already ran. Defaults to <eqs>/.list_eqs_done_imput."
+)
+parser.add_argument(
+    '--list-eqs-unfeasible', default='',
+    help="File on which to save list of equipments that are unfeasible for class imputation. Defaults to <eqs>/.list_eqs_unfeasible."
+)
+
+args, _ = parser.parse_known_args ()
+print (args)
+
+tables_in_path = args.eqs
+assert exists (tables_in_path), f'{tables_in_path} directory does not exist'
+
+year = args.year
+assert year > 0 and year <= datetime.date.today().year, f'Year {year} not between 0 and {datetime.date.today().year}'
+
+system_tag = args.system_tag
+
+list_eqs_unfeasible_fn = (
+    args.list_eqs_unfeasible if args.list_eqs_unfeasible 
+    else join (tables_in_path, '.list_eqs_unfeasible')
+)
+
+if not exists (list_eqs_unfeasible_fn):
+    try:
+        with open (list_eqs_unfeasible_fn, 'w') as f:
+            pass
+    except FileNotFoundError as e:
+        raise Exception (f'Supplied {list_eqs_unfeasible_fn} file could no be opened.')
 
 eqs = [eq for eq in listdir (tables_in_path) if eq.startswith ('eq_')]
 
-if exists (tables_in_path + '.list_eqs_done_imput'):
-    with open (tables_in_path + '.list_eqs_done_imput', 'r') as list_eqs_done:
+list_eqs_done_fn = (
+    args.list_eqs_done if args.list_eqs_done 
+    else join (tables_in_path, '.list_eqs_done_imput')
+)
+
+if exists (list_eqs_done_fn):
+    with open (list_eqs_done_fn, 'r') as list_eqs_done:
         done_eqs = list_eqs_done.read ().split ('\n')[:-1]
     
     eqs = setdiff1d (eqs, done_eqs)
     random.shuffle (eqs)
-
-tables_in_path = in_path + 'relatorios_2018/'
+else:
+    try:
+        with open (list_eqs_done_fn, 'w') as f:
+            pass
+    except FileNotFoundError as e:
+        raise Exception (f'Supplied {list_eqs_done_fn} file could no be opened.')
 
 def run_eq (
     eq, eq_table, list_eqs_unfeasible, 
@@ -104,9 +148,9 @@ def run_eq (
     print (eq, eq_tag)
 
     if (
-        not isfile (tables_in_path + eq + '/imput_' + eq_table_tag)
-        or not isfile (tables_in_path + eq + '/lost_days_d_' + eq_tag)
-        or not isfile (tables_in_path + eq + '/outli_' + eq_tag)
+        not isfile (join (tables_in_path, eq, 'imput_' + eq_table_tag))
+        or not isfile (join (tables_in_path, eq, 'lost_days_d_' + eq_tag))
+        or not isfile (join (tables_in_path, eq, 'outli_' + eq_tag))
     ):
         print ('Missing imputed frequency matrix or lost_days inidicators for equipament ' + str (eq.split ('_')[-1]))
         list_eqs_unfeasible.write (eq + ',' + eq_tag.split('_')[-1] + '\n')
@@ -114,16 +158,18 @@ def run_eq (
         return -1
     
     df_heudson_matrix = read_csv (
-        tables_in_path + eq + '/outl_' + eq_tag, 
+        join (tables_in_path, eq, 'outl_' + eq_tag),
         index_col=0, parse_dates=True
     )
 
     heudson_matrix = df_heudson_matrix.values.astype (float)
 
-    class_matrix = loadtxt (
-        tables_in_path + eq + '/' + eq_table, 
-        delimiter=',', dtype=float
+    df_class_matrix = read_csv (
+        join (tables_in_path, eq, eq_table),
+        index_col=0
     )
+
+    class_matrix = df_class_matrix.values.astype (float)
 
     data_len = class_matrix.shape[0]
     class_count = class_matrix.shape[1] // data_flen
@@ -135,7 +181,7 @@ def run_eq (
     this_years_days = df_heudson_matrix.index.year == year
 
     imputed_matrix_this_year = loadtxt (
-        tables_in_path + eq + '/imput_' + eq_table_tag, 
+        join (tables_in_path, eq, 'imput_' + eq_table_tag), 
         delimiter=',', dtype=float
     )
 
@@ -149,7 +195,7 @@ def run_eq (
     imputed_matrix[this_years_days] = imputed_matrix_this_year
 
     lost_days_this_year = loadtxt (
-        tables_in_path + eq + '/lost_days_d_' + eq_tag, 
+        join (tables_in_path, eq, 'lost_days_d_' + eq_tag),
         delimiter=',', dtype=bool
     )
 
@@ -158,7 +204,7 @@ def run_eq (
 
     del this_years_days, lost_days_this_year, imputed_matrix_this_year, df_heudson_matrix
 
-    flags_matrix = loadtxt (tables_in_path + eq + '/outli_' + eq_tag, delimiter=',', dtype=float)
+    flags_matrix = loadtxt (join (tables_in_path, eq, 'outli_' + eq_tag), delimiter=',', dtype=float)
     print (flags_matrix.shape, heudson_matrix.shape)
 
     # places changed after imputation
@@ -336,15 +382,15 @@ def run_eq (
             prod (mean_margins.shape[:-1]), mean_margins.shape[-1]
         ))
 
-        imput_float_path = tables_in_path + eq + '/imput_boot_float_' + eq_table_tag
-        imput_path = tables_in_path + eq + '/imput_boot_' + eq_table_tag
-        flags_path = tables_in_path + eq + '/outli_f_' + eq_tag
-        rates_path = tables_in_path + eq + '/imput_rates_' + eq_tag
-        margins_path = tables_in_path + eq + '/margins_f_' + eq_tag
-        rem_flags_path = tables_in_path + eq + '/rem_flags_' + eq_tag
-        rem_lost_path = tables_in_path + eq + '/lost_days_' + eq_tag
-        estimated_path = tables_in_path + eq + '/estimated_days_' + eq_tag
-        labels_path = tables_in_path + eq + '/labels_f_' + eq_tag
+        imput_float_path = join (tables_in_path, eq, 'imput_boot_float_' + eq_table_tag)
+        imput_path = join (tables_in_path, eq, 'imput_boot_' + eq_table_tag)
+        flags_path = join (tables_in_path, eq, 'outli_f_' + eq_tag)
+        rates_path = join (tables_in_path, eq, 'imput_rates_' + eq_tag)
+        margins_path = join (tables_in_path, eq, 'margins_f_' + eq_tag)
+        rem_flags_path = join (tables_in_path, eq, 'rem_flags_' + eq_tag)
+        rem_lost_path = join (tables_in_path, eq, 'lost_days_' + eq_tag)
+        estimated_path = join (tables_in_path, eq, 'estimated_days_' + eq_tag)
+        labels_path = join (tables_in_path, eq, 'labels_f_' + eq_tag)
 
         for path, table, fmt in zip (
             [imput_path, imput_float_path, flags_path, rates_path,
@@ -365,12 +411,12 @@ def run_eq (
 
         mean_margins = mean_margins.reshape ((prod (mean_margins.shape[:-1]), mean_margins.shape[-1]))
 
-        flags_path = tables_in_path + eq + '/outli_f_' + eq_tag
-        margins_path = tables_in_path + eq + '/margins_f_' + eq_tag
-        rem_flags_path = tables_in_path + eq + '/rem_flags_' + eq_tag
-        rem_lost_path = tables_in_path + eq + '/lost_days_' + eq_tag
-        estimated_path = tables_in_path + eq + '/estimated_days_' + eq_tag
-        labels_path = tables_in_path + eq + '/labels_f_' + eq_tag
+        flags_path = join (tables_in_path, eq, 'outli_f_' + eq_tag)
+        margins_path = join (tables_in_path, eq, 'margins_f_' + eq_tag)
+        rem_flags_path = join (tables_in_path, eq, 'rem_flags_' + eq_tag)
+        rem_lost_path = join (tables_in_path, eq, 'lost_days_' + eq_tag)
+        estimated_path = join (tables_in_path, eq, 'estimated_days_' + eq_tag)
+        labels_path = join (tables_in_path, eq, 'labels_f_' + eq_tag)
 
         for path, table, fmt in zip (
             [flags_path, margins_path, 
@@ -392,7 +438,7 @@ def run_eq (
 
     return 1
 
-def run_eq_loop (eqs, list_eqs_done, list_eqs_unfeasible):
+def run_eq_loop (eqs, list_eqs_done, list_eqs_unfeasible, system_tag):
     data_flen = 96
     relevant_features_count = data_flen - 24
 
@@ -403,13 +449,11 @@ def run_eq_loop (eqs, list_eqs_done, list_eqs_unfeasible):
     features_bins = zeros (data_flen)
     features_bins[features_vector] = 1
 
-    system_tag = 'pnct'
-
     for eq in eqs:
         print (eq)
             
         eq_tables = [
-            eq for eq in listdir (tables_in_path + eq)
+            eq for eq in listdir (join (tables_in_path, eq))
             if eq.startswith ('freq') and eq.endswith (system_tag + '.csv')
         ]
 
@@ -428,9 +472,6 @@ def run_eq_loop (eqs, list_eqs_done, list_eqs_unfeasible):
         if flag == 1:
             list_eqs_done.write (eq + '\n')
 
-list_eqs_done_fn = tables_in_path + '.list_eqs_done_imput'
-list_eqs_unfeasible_fn = tables_in_path + '.list_eqs_unfeasible'
-
 with open (list_eqs_done_fn, 'a', buffering=1) as list_eqs_done:
     with open (list_eqs_unfeasible_fn, 'a', buffering=1) as list_eqs_unfeasible:
-        run_eq_loop (eqs, list_eqs_done, list_eqs_unfeasible)
+        run_eq_loop (eqs, list_eqs_done, list_eqs_unfeasible, system_tag)

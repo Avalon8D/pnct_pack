@@ -1,29 +1,50 @@
 from numpy import *
 from pandas import read_csv
 from os import sys, listdir
-from os.path import exists
+from os.path import exists, join
 
-sys.path += ['/home/sianna/issues/C_Clustering/code']
+from argparse import ArgumentParser
 
 from all_code import python_interface_funcs as cluster_lib
 import builtins
 
 from subprocess import run
 
-in_path = '/home/sianna/issues/C_Clustering/data/'
-tables_in_path = in_path + 'relatorios_2018/'
-tables_in_path = in_path + 'relatorios_broken/'
+parser = ArgumentParser(description="""\
+    Batch script to cluster and detect outliers from directory containing equipments data.
+""")
+
+parser.add_argument('system_tag', help="Type of classes used, for example: pnct, sgp, hdm4. Used only for filename lookup and writing.")
+parser.add_argument('eqs', help="Directory containing folders for each equipment data.")
+parser.add_argument(
+    '--list-eqs-done', default='',
+    help="File on which to save and check list of equipments already ran. Defaults to <eqs>/.list_eqs_done."
+)
+
+args, _ = parser.parse_known_args ()
+print (args)
+
+tables_in_path = args.eqs
+assert exists (tables_in_path), f'{tables_in_path} directory does not exist'
+
+system_tag = args.system_tag
+
+list_eqs_done_fn = args.list_eqs_done if args.list_eqs_done else join (tables_in_path, '.list_eqs_done')
 
 eqs = [eq for eq in listdir (tables_in_path) if eq.startswith ('eq_')]
 
-if exists (tables_in_path + '.list_eqs_done'):
-    with open (tables_in_path + '.list_eqs_done', 'r') as list_eqs_done:
+if exists (list_eqs_done_fn):
+    with open (list_eqs_done_fn, 'r') as list_eqs_done:
         done_eqs = list_eqs_done.read ().split ('\n')[:-1]
     
     eqs = setdiff1d (eqs, done_eqs)
     random.shuffle (eqs)
-
-# tables_in_path = in_path + 'relatorios_2018/'
+else:
+    try:
+        with open (list_eqs_done_fn, 'w') as f:
+            pass
+    except FileNotFoundError as e:
+        raise Exception (f'Supplied {list_eqs_done_fn} file could no be opened.')
 
 def run_eq (
     eq, eq_table,
@@ -33,8 +54,8 @@ def run_eq (
     eq_tag = '_'.join (eq_table.split('_')[1:-1]) + '.csv'
     eq_table_tag = '_'.join (eq_table.split('_')[1:])
 
-    class_matrix = read_csv (tables_in_path + eq + '/' + eq_table, index_col=0, header=None).values.astype (float)
-    heudson_matrix = read_csv (tables_in_path + eq + '/outl_' + eq_tag, index_col=0).values.astype (float)
+    class_matrix = read_csv (join (tables_in_path, eq, eq_table), index_col=0, header=None).values.astype (float)
+    heudson_matrix = read_csv (join (tables_in_path, eq, 'outl_' + eq_tag), index_col=0).values.astype (float)
 
     data_len = class_matrix.shape[0]
 
@@ -166,10 +187,10 @@ def run_eq (
 
     mean_margins = mean_margins.reshape ((prod (mean_margins.shape[:-1]), mean_margins.shape[-1]))
 
-    flags_path = tables_in_path + eq + '/outli_' + eq_tag
-    labels_path = tables_in_path + eq + '/labels_' + eq_tag
-    labeled_path = tables_in_path + eq + '/labeled_ids_' + eq_tag
-    margins_path = tables_in_path + eq + '/margins_' + eq_tag
+    flags_path = join (tables_in_path, eq, 'outli_' + eq_tag)
+    labels_path = join (tables_in_path, eq, 'labels_' + eq_tag)
+    labeled_path = join (tables_in_path, eq, 'labeled_ids_' + eq_tag)
+    margins_path = join (tables_in_path, eq, 'margins_' + eq_tag)
 
     for path, table, fmt in zip ([flags_path, labels_path, labeled_path, margins_path], 
                                  [flags_matrix, data_cluster_ids, labeled_ids, mean_margins], 
@@ -179,7 +200,7 @@ def run_eq (
     c_clustering.kill_memory_block ()
     c_sample_space.kill_memory_block ()
 
-def run_eq_loop (eqs, list_eqs_done):
+def run_eq_loop (eqs, list_eqs_done, system_tag):
     data_flen = 96
     relevant_features_count = data_flen - 24
 
@@ -191,13 +212,11 @@ def run_eq_loop (eqs, list_eqs_done):
     features_bins = zeros (data_flen)
     features_bins[features_vector] = 1
     
-    system_tag = 'pnct'
-
     for eq in eqs:
         print (eq)
 
         eq_tables = [
-            eq for eq in listdir (tables_in_path + eq)
+            eq for eq in listdir (join (tables_in_path, eq))
             if eq.startswith ('freq') and eq.endswith (system_tag + '.csv')
         ]
 
@@ -212,7 +231,5 @@ def run_eq_loop (eqs, list_eqs_done):
 
         list_eqs_done.write (eq + '\n')
 
-list_eqs_done_fn = tables_in_path + '.list_eqs_done'
-
 with open (list_eqs_done_fn, 'a', buffering=1) as list_eqs_done:
-    run_eq_loop (eqs, list_eqs_done)
+    run_eq_loop (eqs, list_eqs_done, system_tag)
