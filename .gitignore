@@ -1,6 +1,7 @@
+.env
 .conda_env
 .tmp
 __pycache__
 */__pycache__
-all/code/*.o
-all/code/*.so
+all_code/*.o
+all_code/*.so

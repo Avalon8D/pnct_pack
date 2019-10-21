@@ -26,7 +26,7 @@ assert exists(dest_path), f'{dest_path} directory does not exist'
 
 print (source_path, dest_path)
 
-for eq in listdir(f'{dest_path}'):
+for eq in (eq for eq in listdir(f'{dest_path}') if eq.startswith('eq_')):
 	outlis = f'{source_path}/{eq}/outli_eq_*.csv'
 	imputs = f'{source_path}/{eq}/imput_eq_*.csv'
 	lost_days = f'{source_path}/{eq}/lost_days_d_eq_*.csv'

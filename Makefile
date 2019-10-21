@@ -1,4 +1,4 @@
-.PHONY: compile, clean_compile, build, download_conda, install_conda, requirements, all, clean
+.PHONY: compile, clean_compile, build, download_conda, install_conda, requirements, all, clean, dotenv
 .ONESHELL:
 
 MINICONDA_URL="https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh"
@@ -58,7 +58,18 @@ clean_compile:
 
 build: compile clean_compile
 
-all: install build
+dotenv:
+	echo "export CONDA_PATH=$(CONDA_PATH)
+	export TMP_PATH=$(TMP_PATH)
+	export CONDA_SCRIPT=$(CONDA_SCRIPT)
+	export CONDA_BIN=$(CONDA_BIN)
+	export PIP=$(PIP)
+	export PYTHON=$(PYTHON)
+	export CONDA=$(CONDA)
+	export GCC=$(GCC)" > .env
+
+all: install build dotenv
 
 clean: clean_compile clean_conda
 	rm -f $(code_path)/*.so
+	rm .env
