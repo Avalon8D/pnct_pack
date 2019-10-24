@@ -4,7 +4,7 @@
 MINICONDA_URL="https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh"
 
 CONDA_PATH=./.conda_env
-TMP_PATH=./.tmp
+TMP_PATH=.tmp
 CONDA_SCRIPT=$(TMP_PATH)/miniconda_script.sh
 CONDA_BIN=$(CONDA_PATH)/bin
 PIP=$(CONDA_BIN)/pip
