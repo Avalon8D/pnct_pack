@@ -3,8 +3,8 @@
 
 MINICONDA_URL="https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh"
 
-CONDA_PATH=.conda_env
-TMP_PATH=.tmp
+CONDA_PATH=./.conda_env
+TMP_PATH=./.tmp
 CONDA_SCRIPT=$(TMP_PATH)/miniconda_script.sh
 CONDA_BIN=$(CONDA_PATH)/bin
 PIP=$(CONDA_BIN)/pip
@@ -37,24 +37,26 @@ clean_conda:
 	rm -rf $(TMP_PATH)
 	rm -rf /tmp/$(CONDA_PATH)
 
-code_path=all_code
-bin_path=$(code_path)/bin
+CODE_PATH=./all_code
+bin_path=$(CODE_PATH)/bin
 file_base_name=general_clustering_wraper
-file_path=$(code_path)/c_code
-file=$(code_path)/c_code/general_clustering_wraper
+file_path=$(CODE_PATH)/c_code
+file=$(CODE_PATH)/c_code/general_clustering_wraper
+CLUSTERING_LIB_SO=$(CODE_PATH)/$(file_base_name).so
 
 compile:
-	gcc -c -o $(code_path)/$(file_base_name).o \
+	LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(CODE_PATH) \
+	gcc -c -o $(CODE_PATH)/$(file_base_name).o \
 	-fPIC -Wall -Wextra -Wpedantic -Wformat -D_GNU_SOURCE \
 	-I$(file_path) -I$(CONDA_PATH)/include $(file).c \
-	-lm -Ofast \
-	&& gcc -shared -o $(code_path)/$(file_base_name).so \
+	-lm -lgsl -lgslcblas -llapacke -Ofast \
+	&& gcc -shared -o $(CLUSTERING_LIB_SO) \
 	-Wall -Wextra -Wpedantic -Wformat \
-	-I$(file_path) -I$(CONDA_PATH)/include $(code_path)/$(file_base_name).o \
-	-lm -Ofast
+	-I$(file_path) -I$(CONDA_PATH)/include $(CODE_PATH)/$(file_base_name).o \
+	-lm -lgsl -lgslcblas -llapacke -Ofast
 
 clean_compile:
-	rm -f $(code_path)/*.o
+	rm -f $(CODE_PATH)/*.o
 
 build: compile clean_compile
 
@@ -66,10 +68,12 @@ dotenv:
 	export PIP=$(PIP)
 	export PYTHON=$(PYTHON)
 	export CONDA=$(CONDA)
+	export CODE_PATH=$(CODE_PATH)
+	export CLUSTERING_LIB_SO=$(CLUSTERING_LIB_SO)
 	export GCC=$(GCC)" > .env
 
 all: install build dotenv
 
 clean: clean_compile clean_conda
 	rm -f $(code_path)/*.so
-	rm .env
+	rm -f .env

@@ -1,10 +1,7 @@
 from ctypes import *
-from os import sys
+from os import environ
+from os.path import join
 import numpy
-
-code_path = '/home/sianna/issues/C_Clustering/code'
-sys.path += [code_path]
-code_path += '/'
 
 c_double_p = POINTER(c_double)
 NULL_double = c_double_p ()
@@ -17,13 +14,11 @@ NULL_size_t = c_size_t_p ()
 
 NULL_void = c_void_p ()
 
-c_cluster_lib_name = 'general_clustering_wraper.so'
-c_cluster_lib = CDLL(code_path + c_cluster_lib_name)
+c_cluster_lib_name = environ['CLUSTERING_LIB_SO']
+c_cluster_lib = CDLL(c_cluster_lib_name)
 
 c_cluster_lib.init_rand(None)
 c_cluster_lib.malloc.restype = c_void_p
-
-# tiparrrrr
 
 # general C-utility functions
 
