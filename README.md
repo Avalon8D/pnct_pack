@@ -8,15 +8,21 @@
 
 `make install`
 
-# Caminho para alguns comandos
+# Para compilar o código C
 
-- python: `.conda_env/bin/python`
-- pip: `.conda_env/bin/pip`
-- conda: `.conda_env/bin/conda`
+`make build`
 
-## Alternaivamente rode
+# Para fazer tudo de uma vez
+
+`make all`
+
+# Caminho para comandos
+
+Rode:
 
 `make dotenv && source .env`
+
+**Isso é necessário para rodar os scrips batch!**
 
 Daí as seguintes variáveis de ambiente ficam disponíveis:
 
@@ -27,14 +33,6 @@ Daí as seguintes variáveis de ambiente ficam disponíveis:
 Todas as variáveis de ambientes geradas podem ser encontradas em:
 
 `.env`
-
-# Para compilar o código C
-
-`make build`
-
-# Para fazer tudo de uma vez
-
-`make all`
 
 # Para limpar tudo
 
