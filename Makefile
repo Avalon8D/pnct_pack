@@ -28,7 +28,7 @@ install_conda:
 
 requirements: 
 	$(PIP) install -r requirements.txt
-	$(CONDA) install $(CONDA_FORGE_REQUIREMENTS) -y
+	$(CONDA) install -p $(CONDA_PATH) $(CONDA_FORGE_REQUIREMENTS) -y
 
 install: download_conda install_conda requirements
 
