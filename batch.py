@@ -54,7 +54,7 @@ def run_eq (
     eq_tag = '_'.join (eq_table.split('_')[1:-1]) + '.csv'
     eq_table_tag = '_'.join (eq_table.split('_')[1:])
 
-    class_matrix = read_csv (join (tables_in_path, eq, eq_table), index_col=0, header=None).values.astype (float)
+    class_matrix = read_csv (join (tables_in_path, eq, eq_table), index_col=0).values.astype (float)
     heudson_matrix = read_csv (join (tables_in_path, eq, 'outl_' + eq_tag), index_col=0).values.astype (float)
 
     data_len = class_matrix.shape[0]
