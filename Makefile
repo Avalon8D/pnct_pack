@@ -10,9 +10,9 @@ CONDA_BIN=$(CONDA_PATH)/bin
 PIP=$(CONDA_BIN)/pip
 PYTHON=$(CONDA_BIN)/python
 CONDA=$(CONDA_BIN)/conda
-GCC=$(CONDA_BIN)/gcc
+GCC=$(CONDA_BIN)/x86_64-conda_cos6-linux-gnu-gcc
 
-CONDA_FORGE_REQUIREMENTS=-c conda-forge gsl blas lapack
+CONDA_FORGE_REQUIREMENTS=-c conda-forge gsl blas lapack gcc_impl_linux-64
 
 download_conda:
 	if [ ! -f $(CONDA_SCRIPT) ]; then
@@ -45,15 +45,15 @@ file=$(CODE_PATH)/c_code/general_clustering_wraper
 CLUSTERING_LIB_SO=$(CODE_PATH)/$(file_base_name).so
 
 compile:
-	LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(CONDA_PATH) \
-	gcc -c -o $(CODE_PATH)/$(file_base_name).o \
+	$(GCC) -c -o $(CODE_PATH)/$(file_base_name).o \
 	-fPIC -Wall -Wextra -Wpedantic -Wformat -D_GNU_SOURCE \
 	-I$(file_path) -I$(CONDA_PATH)/include $(file).c \
-	-lm -lgsl -lgslcblas -llapacke -Ofast \
-	&& gcc -shared -o $(CLUSTERING_LIB_SO) \
+	-B $(CONDA_PATH)/lib -lm -lgsl -lgslcblas -llapacke -Ofast \
+	&& \
+	$(GCC) -shared -o $(CLUSTERING_LIB_SO) \
 	-Wall -Wextra -Wpedantic -Wformat \
 	-I$(file_path) -I$(CONDA_PATH)/include $(CODE_PATH)/$(file_base_name).o \
-	-lm -lgsl -lgslcblas -llapacke -Ofast
+	-B $(CONDA_PATH)/lib -lm -lgsl -lgslcblas -llapacke -Ofast
 
 clean_compile:
 	rm -f $(CODE_PATH)/*.o
@@ -62,7 +62,6 @@ build: compile clean_compile
 
 dotenv:
 	echo "export CONDA_PATH=$(CONDA_PATH)
-	export LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(CONDA_PATH)
 	export TMP_PATH=$(TMP_PATH)
 	export CONDA_SCRIPT=$(CONDA_SCRIPT)
 	export CONDA_BIN=$(CONDA_BIN)

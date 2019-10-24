@@ -2,7 +2,6 @@
 
 - **make**
 - **wget**
-- **gcc**
 - **libc**
 
 # Para instalar o conda localmente, com todas as dependências
