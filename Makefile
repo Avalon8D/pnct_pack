@@ -45,7 +45,7 @@ file=$(CODE_PATH)/c_code/general_clustering_wraper
 CLUSTERING_LIB_SO=$(CODE_PATH)/$(file_base_name).so
 
 compile:
-	LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(CODE_PATH) \
+	LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(CONDA_PATH) \
 	gcc -c -o $(CODE_PATH)/$(file_base_name).o \
 	-fPIC -Wall -Wextra -Wpedantic -Wformat -D_GNU_SOURCE \
 	-I$(file_path) -I$(CONDA_PATH)/include $(file).c \
@@ -62,6 +62,7 @@ build: compile clean_compile
 
 dotenv:
 	echo "export CONDA_PATH=$(CONDA_PATH)
+	export LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(CONDA_PATH)
 	export TMP_PATH=$(TMP_PATH)
 	export CONDA_SCRIPT=$(CONDA_SCRIPT)
 	export CONDA_BIN=$(CONDA_BIN)
