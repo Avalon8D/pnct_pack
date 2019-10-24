@@ -3,7 +3,7 @@
 
 MINICONDA_URL="https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh"
 
-CONDA_PATH=./.conda_env
+CONDA_PATH=.conda_env
 TMP_PATH=.tmp
 CONDA_SCRIPT=$(TMP_PATH)/miniconda_script.sh
 CONDA_BIN=$(CONDA_PATH)/bin
@@ -61,16 +61,16 @@ clean_compile:
 build: compile clean_compile
 
 dotenv:
-	echo "export CONDA_PATH=$(CONDA_PATH)
-	export TMP_PATH=$(TMP_PATH)
-	export CONDA_SCRIPT=$(CONDA_SCRIPT)
-	export CONDA_BIN=$(CONDA_BIN)
-	export PIP=$(PIP)
-	export PYTHON=$(PYTHON)
-	export CONDA=$(CONDA)
-	export CODE_PATH=$(CODE_PATH)
-	export CLUSTERING_LIB_SO=$(CLUSTERING_LIB_SO)
-	export GCC=$(GCC)" > .env
+	echo "export CONDA_PATH=./$(CONDA_PATH)
+	export TMP_PATH=./$(TMP_PATH)
+	export CONDA_SCRIPT=./$(CONDA_SCRIPT)
+	export CONDA_BIN=./$(CONDA_BIN)
+	export PIP=./$(PIP)
+	export PYTHON=./$(PYTHON)
+	export CONDA=./$(CONDA)
+	export CODE_PATH=./$(CODE_PATH)
+	export CLUSTERING_LIB_SO=./$(CLUSTERING_LIB_SO)
+	export GCC=./$(GCC)" > .env
 
 all: install build dotenv
 
