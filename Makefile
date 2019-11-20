@@ -7,7 +7,7 @@ CONDA_PATH=.conda_env
 TMP_PATH=.tmp
 CONDA_SCRIPT=$(TMP_PATH)/miniconda_script.sh
 CONDA_BIN=$(CONDA_PATH)/bin
-PIP=$(CONDA_BIN)/pip
+PIP=$(CONDA_BIN)/python -m pip
 PYTHON=$(CONDA_BIN)/python
 CONDA=$(CONDA_BIN)/conda
 GCC=$(CONDA_BIN)/x86_64-conda_cos6-linux-gnu-gcc
@@ -24,7 +24,7 @@ download_conda:
 install_conda:
 	$(CONDA_SCRIPT) -b -p /tmp/$(CONDA_PATH) -f
 	/tmp/$(CONDA) create -f -p $(CONDA_PATH) python==3.7 conda -y
-	rm -rf /tmp/$(CONDA)
+	rm -rf /tmp/$(CONDA_PATH)
 
 requirements: 
 	$(PIP) install -r requirements.txt
@@ -35,7 +35,6 @@ install: download_conda install_conda requirements
 clean_conda:
 	rm -rf $(CONDA_PATH)
 	rm -rf $(TMP_PATH)
-	rm -rf /tmp/$(CONDA_PATH)
 
 CODE_PATH=./all_code
 bin_path=$(CODE_PATH)/bin

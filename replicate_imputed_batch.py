@@ -14,7 +14,7 @@ parser.add_argument('source_path', help="Source directory containing imputed equ
 parser.add_argument('dest_path', help="Destination directory containing imputed equipments")
 
 parser.add_argument('dest_tag', help="Type of classes used for the destiantion equipments, for example: pnct, sgp, hdm4.")
-parser.add_argument('--source_tag', default='pnct', help="Type of classes used for the source equipments, for example: pnct, sgp, hdm4. Defaults to pnct.")
+parser.add_argument('--source-tag', default='pnct', help="Type of classes used for the source equipments, for example: pnct, sgp, hdm4. Defaults to pnct.")
 
 args, _ = parser.parse_known_args ()
 
@@ -39,11 +39,11 @@ for eq in (eq for eq in listdir(f'{dest_path}') if eq.startswith('eq_')):
 	# 	shell=True
 	# )
 
-	print (f'cp {imputs} {lost_days} {dest_folder}')
-	run (
-		f'cp {imputs} {lost_days} {dest_folder}',
-		shell=True
-	)
+	# print (f'cp {imputs} {lost_days} {dest_folder}')
+	# run (
+	# 	f'cp {imputs} {lost_days} {dest_folder}',
+	# 	shell=True
+	# )
 
 	for imput_eq in (
 		a_csv 
