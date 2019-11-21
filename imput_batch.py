@@ -50,7 +50,7 @@ def bootstrap_class_imputation(
                 data_cluster_ids, imputed_class_matrix[:], invalid_flags[:], change_vector
             ) if vals[-1]
     ):
-        for i in (j for j, flag in enumerate(point_flags) if flag and class_clusters[class_label][i].shape[0] > 0):
+        for i in (j for j, flag in enumerate(point_flags) if flag and class_clusters[class_label][j].shape[0] > 0):
             sample_bound = class_clusters[class_label][i].shape[0]
             sample_classes = class_clusters[class_label][i][random.choice(sample_bound, size=sample_len)]
             sample_classes = sample_classes[sample_classes[:, 0] > 0]
