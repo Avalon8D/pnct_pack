@@ -13,14 +13,13 @@ from numba import jit
 import datetime
 
 
-def bootstrap_class_imputation(
-        class_matrix, imputed_matrix, data_cluster_ids,
-        flags_matrix, cluster_count, data_flen, sample_len,
-        change_vector
+def create_class_clusters(
+        class_matrix, data_cluster_ids,
+        flags_matrix, cluster_count, data_flen
 ):
     valid_flags = flags_matrix < 1
     invalid_flags = flags_matrix > 0
-    class_clusters = [
+    return [
         [
             class_matrix[logical_and(data_cluster_ids == i, valid_flags[:, j]), j::data_flen]
             if logical_and(data_cluster_ids == i, valid_flags[:, j]).sum() > 0
@@ -28,6 +27,18 @@ def bootstrap_class_imputation(
             for j in range(data_flen)
         ] for i in range(cluster_count)
     ]
+
+
+def bootstrap_class_imputation(
+        class_matrix, imputed_matrix, data_cluster_ids,
+        flags_matrix, cluster_count, data_flen, sample_len,
+        change_vector
+):
+    class_clusters = create_class_clusters(
+        class_matrix, data_cluster_ids,
+        flags_matrix, cluster_count, data_flen
+    )
+    invalid_flags = flags_matrix > 0
 
     imputed_class_matrix = class_matrix.copy()
     imputed_class_matrix[:, :data_flen] = imputed_matrix
@@ -39,7 +50,7 @@ def bootstrap_class_imputation(
                 data_cluster_ids, imputed_class_matrix[:], invalid_flags[:], change_vector
             ) if vals[-1]
     ):
-        for i in (j for j, flag in enumerate(point_flags) if flag):
+        for i in (j for j, flag in enumerate(point_flags) if flag and class_clusters[class_label][i].shape[0] > 0):
             sample_bound = class_clusters[class_label][i].shape[0]
             sample_classes = class_clusters[class_label][i][random.choice(sample_bound, size=sample_len)]
             sample_classes = sample_classes[sample_classes[:, 0] > 0]
@@ -284,8 +295,6 @@ def run_eq(
             c_subset_original_ids=c_subset_original_ids
         )
 
-        cumm_frac = .9
-        small_fraction = .05
         cluster_count = None
         c_clustering, affinity_vals = cluster_lib.AFFINITY_ALGOS.affinity_laplacian_eigen_kmeans(
             affinity_matrix, 2 * trial_max,
@@ -319,15 +328,12 @@ def run_eq(
     irrelevant_data = imputed_matrix[:, ~feature_bins_bool]
     c_irrelevant_data = cluster_lib.DATA_WORKSPC.alloc_from_numpy_data(irrelevant_data)
 
-    sets_len = 3
     masses_set = [(.125, .375), (.25, .5), (.375, .625)]
     ranges_set = [(5.5, 2.5), (4.5, 2), (3, 1.5)]
     relevant_bound_up, relevant_bound_down = 2000, .9
 
-    masses_labels = ['Inner', 'Broader', 'Outer']
 
     interinter_margins_set = []
-    data_flags_set = []
 
     for (sub_mass, mass), (range_up, range_down) in zip(masses_set, ranges_set):
         chunked_margin = empty((2, cluster_count, data_flen))
@@ -360,6 +366,11 @@ def run_eq(
     rem_lost_days = (dot(rem_flags_matrix, features_bins) > .2 * features_vector.shape[0]) | lost_days
 
     boot_sample_len = 15
+
+    class_clusters = create_class_clusters(
+        class_matrix, data_cluster_ids,
+        flags_matrix, cluster_count, data_flen
+    )
 
     # at least 80% avaliable for good sampling
     if (
