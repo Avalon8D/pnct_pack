@@ -5,3 +5,5 @@ __pycache__
 */__pycache__
 all_code/*.o
 all_code/*.so
+.idea
+.idea/*
