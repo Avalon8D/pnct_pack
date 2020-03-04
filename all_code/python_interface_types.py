@@ -1,8 +1,9 @@
 from ctypes import *
-from os import environ
-from os.path import join
+from os.path import dirname
 
 import numpy
+
+import all_code
 
 c_double_p = POINTER(c_double)
 NULL_double = c_double_p()
@@ -15,8 +16,14 @@ NULL_size_t = c_size_t_p()
 
 NULL_void = c_void_p()
 
-c_cluster_lib_name = environ['CLUSTERING_LIB_SO']
-c_cluster_lib = CDLL(c_cluster_lib_name)
+try:
+    c_cluster_lib = CDLL(f'{dirname(all_code.__file__)}/general_clustering_wrapper.so')
+except OSError as e:
+    if e.args[0].endswith("No such file or directory"):
+        error_message = e.args[0] + ".\nClib general_clustering_wrapper probably needs to be compiled"
+        e.args = (error_message, *e.args[1:])
+
+    raise e
 
 c_cluster_lib.init_rand(None)
 c_cluster_lib.malloc.restype = c_void_p

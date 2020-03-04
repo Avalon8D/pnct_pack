@@ -2,21 +2,16 @@
 # remember to always init rand
 # from os import sys
 
-from math import isnan
 from numba import jit, vectorize
-from numpy import sqrt, ceil
+from numpy import ceil, dot
 from scipy.sparse.linalg import eigsh
 
 from .python_interface_types import *
 
 c_cluster_lib.clustering_normalize.restype = c_long
 c_cluster_lib.sorted_vec_percentile.restype = c_double
-c_cluster_lib.init_rand(None)
+c_cluster_lib.init_rand(POINTER(c_uint)(c_uint(1793414758)))
 
-
-# rearrange functions so that features for proclus are optional
-# add clustering normalization option for lazy proclus. 
-# That is, breaking of small clusters
 
 class BASE_CLUSTERING_ALGOS():
     def proclus_pieces_alloc(
@@ -570,7 +565,7 @@ class CLUSTER_STATS():
         return c_centroids, c_sample_space
 
     def centroids_initd_base_percentile(c_data, c_clustering, c_centroids, c_sample_space, percentile):
-        cluster_lib.clustering_percentile_centroids(
+        c_cluster_lib.clustering_percentile_centroids(
             c_data, c_clustering, c_centroids, c_sample_space, c_double(percentile)
         )
 

@@ -1,16 +1,13 @@
+import datetime
+from argparse import ArgumentParser
+from os import listdir
+from os.path import isfile, exists, join
+
+from numba import jit
 from numpy import *
 from pandas import read_csv
-from os import sys, listdir
-from os.path import isfile, exists, join
-from argparse import ArgumentParser
 
 from all_code import python_interface_funcs as cluster_lib
-import builtins
-
-from subprocess import run
-from numba import jit
-
-import datetime
 
 
 def create_class_clusters(
@@ -44,11 +41,11 @@ def bootstrap_class_imputation(
     imputed_class_matrix[:, :data_flen] = imputed_matrix
 
     for class_label, class_point, point_flags in (
-            # filters out non imputed days
-            vals[:-1]
-            for vals in zip(
-                data_cluster_ids, imputed_class_matrix[:], invalid_flags[:], change_vector
-            ) if vals[-1]
+        # filters out non imputed days
+        vals[:-1]
+        for vals in zip(
+            data_cluster_ids, imputed_class_matrix[:], invalid_flags[:], change_vector
+        ) if vals[-1]
     ):
         for i in (j for j, flag in enumerate(point_flags) if flag and class_clusters[class_label][j].shape[0] > 0):
             sample_bound = class_clusters[class_label][i].shape[0]
@@ -68,7 +65,7 @@ def bootstrap_class_imputation(
 
 
 @jit
-def trucate_class_matrix(imputed_class_matrix, data_len, class_count, data_flen):
+def truncate_class_matrix(imputed_class_matrix, data_len, class_count, data_flen):
     imputed_class_matrix_int = imputed_class_matrix.astype(int, copy=True). \
         reshape(data_len, class_count, data_flen)
     bin_arg_maxes = empty(data_len, dtype=int)
@@ -304,7 +301,7 @@ def run_eq(
 
     else:
         max_cluster_count = 4
-        trial_max = 128;
+        trial_max = 128
         small_fraction = .05
 
         c_clustering, c_centroids = cluster_lib.BASE_CLUSTERING_ALGOS.kmeans_reassign_small(
@@ -331,7 +328,6 @@ def run_eq(
     masses_set = [(.125, .375), (.25, .5), (.375, .625)]
     ranges_set = [(5.5, 2.5), (4.5, 2), (3, 1.5)]
     relevant_bound_up, relevant_bound_down = 2000, .9
-
 
     interinter_margins_set = []
 
@@ -372,7 +368,7 @@ def run_eq(
         flags_matrix, cluster_count, data_flen
     )
 
-    # at least 80% avaliable for good sampling
+    # at least 80% available for good sampling
     if (
             (flags_matrix[:, feature_bins_bool] < 1).sum(axis=0) > 3 * boot_sample_len
     ).sum() > .8 * feature_bins_bool.sum():
@@ -391,7 +387,7 @@ def run_eq(
             class_rates_matrix[nonzero, i::data_flen] /= imputed_class_matrix[nonzero, i].reshape(-1, 1)
             class_rates_matrix[logical_not(nonzero), i::data_flen] = 0
 
-        imputed_class_matrix_int = trucate_class_matrix(
+        imputed_class_matrix_int = truncate_class_matrix(
             imputed_class_matrix, data_len, class_count, data_flen
         )
 

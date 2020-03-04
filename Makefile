@@ -12,8 +12,6 @@ PYTHON=$(CONDA_BIN)/python
 CONDA=$(CONDA_BIN)/conda
 GCC=$(CONDA_BIN)/x86_64-conda_cos6-linux-gnu-gcc
 
-CONDA_FORGE_REQUIREMENTS=-c conda-forge gsl blas lapack gcc_impl_linux-64
-
 download_conda:
 	if [ ! -f $(CONDA_SCRIPT) ]; then
 		mkdir -p $(TMP_PATH)
@@ -23,12 +21,13 @@ download_conda:
 
 install_conda:
 	$(CONDA_SCRIPT) -b -p /tmp/$(CONDA_PATH) -f
-	/tmp/$(CONDA) create -f -p $(CONDA_PATH) python==3.7 conda -y
+	/tmp/$(CONDA) create -f -p $(CONDA_PATH) python==3.8 conda -y
 	rm -rf /tmp/$(CONDA_PATH)
+	$(CONDA) init bash
 
 requirements: 
-	$(PIP) install -r requirements.txt
-	$(CONDA) install -p $(CONDA_PATH) $(CONDA_FORGE_REQUIREMENTS) -y
+	$(CONDA) install -p $(CONDA_PATH) --file conda_requirements.txt -y
+	$(PIP) install -U -r requirements.txt
 
 install: download_conda install_conda requirements
 
@@ -38,7 +37,7 @@ clean_conda:
 
 CODE_PATH=all_code
 bin_path=$(CODE_PATH)/bin
-file_base_name=general_clustering_wraper
+file_base_name=general_clustering_wrapper
 file_path=$(CODE_PATH)/c_code
 file=$(CODE_PATH)/c_code/general_clustering_wraper
 CLUSTERING_LIB_SO=$(CODE_PATH)/$(file_base_name).so
