@@ -215,11 +215,11 @@ class BASE_CLUSTERING_ALGOS():
 
 class AFFINITY_ALGOS():
 
-    @jit
+    @jit(forceobj=True)
     def affinity_mat_lambda(affinity_matrix):
         return lambda i, j: affinity_matrix[i, j]
 
-    @jit
+    @jit(forceobj=True)
     def n_affinity_intr_dim(n_affinity_matrix):
         return int(ceil(n_affinity_matrix.trace()))
 
@@ -290,7 +290,7 @@ class AFFINITY_ALGOS():
 
     # if small thresh is not None, kmeans with reassign small clusters is ran, 
     # with small_cluster_thresh as threshold
-    @jit
+    @jit(forceobj=True)
     def affinity_laplacian_eigen_kmeans(
             affinity_matrix, trial_max,
             cluster_count=None, small_cluster_thresh=None,
@@ -465,16 +465,16 @@ class CLUSTER_STATS():
     # one means below low margin, two means above, three means both, zero, none
     # that is, in signed mode
     # otherwise, when nonzero is true, 0 indicates a bin beyond a margin, 1 otherwise
-    nonzero_bin_class = vectorize()(jit()(
+    nonzero_bin_class = vectorize()(jit(nopython=True)(
         lambda data_bin, up_bin, down_bin: 0 if (data_bin > up_bin) or (data_bin < down_bin) else 1)
     )
-    signed_bin_class = vectorize()(jit()(
+    signed_bin_class = vectorize()(jit(nopython=True)(
         lambda data_bin, up_bin, down_bin: (2 if data_bin < down_bin else 1)
         if data_bin > up_bin
         else (-1 if data_bin < down_bin else 0)
     ))
 
-    @jit
+    @jit(nopython=True)
     def beyond_margins_flags(data_matrix, margins_matrix, clustering_vector=None, nonzero=False):
         flags_matrix = numpy.empty(data_matrix.shape)
 
@@ -501,7 +501,7 @@ class CLUSTER_STATS():
 
         return flags_matrix
 
-    @jit
+    @jit(nopython=True)
     def weighted_point_flags(flags_matrix, point_flags_weights):
         data_len = flags_matrix.shape[0]
 
@@ -517,7 +517,7 @@ class CLUSTER_STATS():
     # one means below low margin, two means above, three means both, zero, none
     # that is, in signed mode
     # otherwise, when nonzero is true, 0 indicates a bin beyond a margin, 1 otherwise
-    @jit
+    @jit(nopython=True)
     def beyond_margins_point_flags(
             data_matrix, margins_matrix, point_flags_weights,
             clustering_vector=None, nonzero=False
@@ -537,7 +537,7 @@ class CLUSTER_STATS():
             for point_flag, data_line in zip(
                     point_flags_vector.reshape(-1, 1)[:], data_matrix[:]
             ):
-                point_flag = bin_class(
+                bin_class(
                     data_line, data_margin_up,
                     data_margin_down,
                     out=flags_line_buffer
