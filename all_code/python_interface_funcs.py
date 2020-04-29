@@ -6,7 +6,7 @@ from numba import jit, vectorize
 from numpy import ceil, dot
 from scipy.sparse.linalg import eigsh
 
-from .python_interface_types import *
+from all_code.python_interface_types import *
 
 c_cluster_lib.clustering_normalize.restype = c_long
 c_cluster_lib.sorted_vec_percentile.restype = c_double

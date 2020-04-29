@@ -15,7 +15,6 @@ def create_class_clusters(
         flags_matrix, cluster_count, data_flen
 ):
     valid_flags = flags_matrix < 1
-    invalid_flags = flags_matrix > 0
     return [
         [
             class_matrix[logical_and(data_cluster_ids == i, valid_flags[:, j]), j::data_flen]
