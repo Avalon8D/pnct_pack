@@ -465,16 +465,15 @@ class CLUSTER_STATS():
     # one means below low margin, two means above, three means both, zero, none
     # that is, in signed mode
     # otherwise, when nonzero is true, 0 indicates a bin beyond a margin, 1 otherwise
-    nonzero_bin_class = vectorize()(jit(nopython=True)(
+    nonzero_bin_class = vectorize()(jit(forceobj=True)(
         lambda data_bin, up_bin, down_bin: 0 if (data_bin > up_bin) or (data_bin < down_bin) else 1)
     )
-    signed_bin_class = vectorize()(jit(nopython=True)(
+    signed_bin_class = vectorize()(jit(forceobj=True)(
         lambda data_bin, up_bin, down_bin: (2 if data_bin < down_bin else 1)
         if data_bin > up_bin
         else (-1 if data_bin < down_bin else 0)
     ))
 
-    @jit(nopython=True)
     def beyond_margins_flags(data_matrix, margins_matrix, clustering_vector=None, nonzero=False):
         flags_matrix = numpy.empty(data_matrix.shape)
 
@@ -501,7 +500,6 @@ class CLUSTER_STATS():
 
         return flags_matrix
 
-    @jit(nopython=True)
     def weighted_point_flags(flags_matrix, point_flags_weights):
         data_len = flags_matrix.shape[0]
 
@@ -517,7 +515,6 @@ class CLUSTER_STATS():
     # one means below low margin, two means above, three means both, zero, none
     # that is, in signed mode
     # otherwise, when nonzero is true, 0 indicates a bin beyond a margin, 1 otherwise
-    @jit(nopython=True)
     def beyond_margins_point_flags(
             data_matrix, margins_matrix, point_flags_weights,
             clustering_vector=None, nonzero=False
