@@ -47,19 +47,20 @@ def bootstrap_class_imputation(
         if not has_changed:
             continue
 
-        for i in (j for j, flag in enumerate(point_flags) if flag and class_clusters[class_label][j].shape[0] > 0):
-            sample_bound = class_clusters[class_label][i].shape[0]
-            sample_classes = class_clusters[class_label][i][random.choice(sample_bound, size=sample_len)]
-            sample_classes = sample_classes[sample_classes[:, 0] > 0]
+        for i, flag in enumerate(point_flags):
+            if flag and class_clusters[class_label][i].shape[0] > 0:
+                sample_bound = class_clusters[class_label][i].shape[0]
+                sample_classes = class_clusters[class_label][i][random.choice(sample_bound, size=sample_len)]
+                sample_classes = sample_classes[sample_classes[:, 0] > 0]
 
-            if sample_classes.size:
-                sample_classes[:, 1:] /= sample_classes[:, 0].reshape(-1, 1)
-                class_point[i + data_flen::data_flen] = sample_classes[:, 1:].mean(axis=0)
+                if sample_classes.size:
+                    sample_classes[:, 1:] /= sample_classes[:, 0].reshape(-1, 1)
+                    class_point[i + data_flen::data_flen] = sample_classes[:, 1:].mean(axis=0)
 
-            else:
-                class_point[i + data_flen::data_flen] = 0
+                else:
+                    class_point[i + data_flen::data_flen] = 0
 
-            class_point[i + data_flen::data_flen] *= class_point[i]
+                class_point[i + data_flen::data_flen] *= class_point[i]
 
     return imputed_class_matrix
 
