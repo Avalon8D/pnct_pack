@@ -9,6 +9,7 @@ from pandas import read_csv
 
 from all_code import python_interface_funcs as cluster_lib
 
+
 @jit(forceobj=True)
 def create_class_clusters(
         class_matrix, data_cluster_ids,
@@ -40,13 +41,12 @@ def bootstrap_class_imputation(
     imputed_class_matrix = class_matrix.copy()
     imputed_class_matrix[:, :data_flen] = imputed_matrix
 
-    for class_label, class_point, point_flags in (
-            # filters out non imputed days
-            vals[:-1]
-            for vals in zip(
+    for class_label, class_point, point_flags, has_changed in zip(
         data_cluster_ids, imputed_class_matrix[:], invalid_flags[:], change_vector
-    ) if vals[-1]
     ):
+        if not has_changed:
+            continue
+
         for i in (j for j, flag in enumerate(point_flags) if flag and class_clusters[class_label][j].shape[0] > 0):
             sample_bound = class_clusters[class_label][i].shape[0]
             sample_classes = class_clusters[class_label][i][random.choice(sample_bound, size=sample_len)]
