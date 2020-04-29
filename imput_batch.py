@@ -65,7 +65,7 @@ def bootstrap_class_imputation(
     return imputed_class_matrix
 
 
-@jit
+@jit(forceobj=True)
 def truncate_class_matrix(imputed_class_matrix, data_len, class_count, data_flen):
     imputed_class_matrix_int = imputed_class_matrix.astype(int, copy=True). \
         reshape(data_len, class_count, data_flen)
